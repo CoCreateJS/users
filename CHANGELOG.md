@@ -1,3 +1,10 @@
+## [1.38.5](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.4...v1.38.5) (2025-10-11)
+
+
+### Bug Fixes
+
+* mask password input type during form submission ([67c7701](https://github.com/CoCreate-app/CoCreate-users/commit/67c7701bf836a46679422faf20cb30b8647f33c1))
+
 ## [1.38.4](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.3...v1.38.4) (2025-05-01)
 
 
