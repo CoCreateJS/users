@@ -92,6 +92,9 @@ const CoCreateUser = {
 		);
 		for (let i = 0; i < inputs.length; i++) {
 			const key = inputs[i].getAttribute("key");
+			if (key === "password" && inputs[i].type === "text") { 
+				inputs[i].type = "password"
+			}
 			const value = await inputs[i].getValue();
 			query[key] = value;
 		}
