@@ -1,3 +1,10 @@
+## [1.39.3](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.2...v1.39.3) (2026-04-04)
+
+
+### Bug Fixes
+
+* data.userKey.object.key assignment after user creation ([8fe7ff5](https://github.com/CoCreate-app/CoCreate-users/commit/8fe7ff58119a7973c2b30b507b7768f0f109d74c))
+
 ## [1.39.2](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.1...v1.39.2) (2026-04-04)
 
 
