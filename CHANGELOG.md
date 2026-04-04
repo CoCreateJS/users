@@ -1,3 +1,18 @@
+# [1.39.0](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.6...v1.39.0) (2026-04-04)
+
+
+### Bug Fixes
+
+* root factory variable Module ([811bfe4](https://github.com/CoCreate-app/CoCreate-users/commit/811bfe4c97da3d619df4ddb577194baac584fff6))
+* root factory variable Module ([4de7567](https://github.com/CoCreate-app/CoCreate-users/commit/4de7567d186b230211c579a311714668a8b3fc1a))
+* signup ([0d9773f](https://github.com/CoCreate-app/CoCreate-users/commit/0d9773ff411dbfb1428bfff5755aae0cc36c1549))
+* Update TODO comment to include a period at the end. ([ce07c87](https://github.com/CoCreate-app/CoCreate-users/commit/ce07c873b38b8b3925ccb048f91b5fabdb591c31))
+
+
+### Features
+
+* update user status to online/offline/idle and corresponding UI changes ([086e970](https://github.com/CoCreate-app/CoCreate-users/commit/086e97008381a7bfc0c73a024d34c537110e0478))
+
 ## [1.38.6](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.5...v1.38.6) (2026-02-04)
 
 
