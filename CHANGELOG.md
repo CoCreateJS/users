@@ -1,3 +1,10 @@
+## [1.38.6](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.5...v1.38.6) (2026-02-04)
+
+
+### Bug Fixes
+
+* update worklow ([921d6b3](https://github.com/CoCreate-app/CoCreate-users/commit/921d6b3ddc2c00ad944cac8c1f13c83e38f8d2aa))
+
 ## [1.38.5](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.4...v1.38.5) (2025-10-11)
 
 
