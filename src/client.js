@@ -7,7 +7,7 @@ import "@cocreate/element-prototype";
 import Observer from "@cocreate/observer";
 import "./index.css";
 
-// TODO: Replace with @cocreate/config
+// TODO: Replace with @cocreate/config.
 import localStorage from "@cocreate/local-storage";
 
 const CoCreateUser = {
