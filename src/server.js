@@ -28,21 +28,32 @@ class CoCreateUser {
 
 	async signUp(data) {
 		try {
+			let response = {
+				socket: data.socket,
+				host: data.host,
+				method: "signUp",
+				success: false,
+				message: "signUp failed",
+				organization_id: data.organization_id,
+				uid: data.uid
+			};
+
 			if (data.user) {
 				data.user.method = "object.create";
 				data.user.host = data.host;
-				const response = await this.crud.send(data.user);
-				this.wsManager.send(response);
+				await this.crud.send(data.user);
 			}
 
 			if (data.userKey) {
 				data.userKey.method = "object.create";
 				data.userKey.host = data.host;
-				const response = await this.crud.send(data.userKey);
-				this.wsManager.send(response);
+				await this.crud.send(data.userKey);
 			}
 
-			this.wsManager.send(data);
+			response.success = true;
+			response.message = "signUp successful";
+
+			this.wsManager.send(response);
 		} catch (error) {
 			console.log("signup error", error);
 		}
@@ -173,8 +184,8 @@ class CoCreateUser {
 		try {
 			data.method = "updateUserStatus";
 
-			if (!data.socket.user_id) data.userStatus = "off";
-			else data.userStatus = "on";
+			if (!data.socket.user_id) data.userStatus = "offline";
+			else data.userStatus = "online";
 
 			this.wsManager.send(data);
 		} catch (error) {

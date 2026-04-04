@@ -28,25 +28,10 @@ const CoCreateUser = {
 	signUp: async function (action) {
 		if (!action.form) return;
 
-		let data = await Elements.save(action.form);
+		let data = await Elements.getData(action.form);
 		let user = data[0];
-		// data.method = 'object.create'
-		// data['array'] = array
 
-		// data.organization_id = organization_id;
-
-		// if (!data.object[0]._id)
-		//     data.object[0]._id = Crud.ObjectId().toString();
-
-		// let user = await Crud.send(data)
-		// Elements.setTypeValue(formEl, user)
-
-		// const socket = Crud.socket.getSockets()
-		// if (!socket[0] || !socket[0].connected || window && !window.navigator.onLine) {
-
-		// ToDo: remove roles handling from client and implement a serverside solution similar to lazyloader webooks processOperators
-		let key = {
-			status: "await",
+		let userKey = {
 			method: "object.create",
 			array: "keys",
 			object: {
@@ -55,32 +40,55 @@ const CoCreateUser = {
 				key: user.object[0]._id,
 				roles: user.object[0].roles || [user.object[0]["roles[]"]],
 				email: user.object[0].email,
-				password: user.object[0].password || btoa("0000"),
+				password: user.object[0].password || window.btoa("0000"),
 				array: user.array
 			}
 		};
 
-		let response = await Crud.send(key);
-		if (response && response.object && response.object[0]) {
-			// Crud.socket.send({ method: 'signUp', user, userKey })
-
-			render({
-				selector: "[template*='signUp']",
-				data: [
-					{
-						type: "signUp",
-						message: "Succesfully Signed Up",
-						success: true
-					}
-				]
+		const socket = await Crud.socket.getSockets();
+		if (
+			!socket[0] ||
+			!socket[0].connected ||
+			(window && !window.navigator.onLine) ||
+			Crud.socket.serverOrganization == false
+		) {
+			user.method = "object.create";
+			await Crud.send(user);
+			let response = await Crud.send(userKey);
+			if (response && response.object && response.object[0]) {
+				this.signUpResponse(response, action);
+			}
+		} else {
+			let request = {
+				method: "signUp",
+				user,
+				userKey,
+				broadcastBrowser: false
+			};
+			
+			Crud.socket.send(request).then((response) => {
+				this.signUpResponse(response, action);
 			});
-
-			action.element.dispatchEvent(
-				new CustomEvent("signUp", {
-					detail: response
-				})
-			);
 		}
+	},
+
+	signUpResponse: function (response, action) {
+		render({
+			selector: "[template*='signUp']",
+			data: [
+				{
+					type: "signUp",
+					message: "Succesfully Signed Up",
+					success: true
+				}
+			]
+		});
+
+		action.element.dispatchEvent(
+			new CustomEvent("signUp", {
+				detail: response
+			})
+		);
 	},
 
 	signIn: async function (action) {
@@ -117,6 +125,7 @@ const CoCreateUser = {
 			Crud.send(request).then((response) => {
 				response["success"] = false;
 				response["status"] = "signIn failed";
+				response["message"] = "offline";
 				if (response.object && response.object[0]) {
 					response["success"] = true;
 					response["status"] = "success";
@@ -145,13 +154,9 @@ const CoCreateUser = {
 			localStorage.setItem("token", token);
 			message = "Successful signIn";
 			Crud.socket.user_id = user_id;
-
-			action.element.dispatchEvent(
-				new CustomEvent("signIn", {
-					detail: {}
-				})
-			);
-		} else message = "The email or password you entered is incorrect";
+		} else if (!message) {
+			message = "The email or password you entered is incorrect";
+		}
 
 		render({
 			selector: "[template*='signIn']",
@@ -164,6 +169,13 @@ const CoCreateUser = {
 				}
 			]
 		});
+
+		action.element.dispatchEvent(
+			new CustomEvent("signIn", {
+				detail: {}
+			})
+		);
+
 	},
 
 	signOut: (action) => {
@@ -206,6 +218,8 @@ const CoCreateUser = {
 	},
 
 	redirect: (data) => {
+		const userStatus = data.userStatus;
+
 		if (
 			(data.user_id && data.user_id !== Crud.socket.user_id) ||
 			(data.clientId && data.clientId !== Crud.socket.clientId)
@@ -213,16 +227,16 @@ const CoCreateUser = {
 			return;
 
 		let redirectTag;
-		if (data.userStatus == "on" || data.userStatus == "idle") {
+		if (userStatus == "on" || userStatus == "idle") {
 			redirectTag = document.querySelector('[session="true"]');
-		} else if (data.userStatus == "off") {
+		} else if (userStatus == "off") {
 			redirectTag = document.querySelector('[session="false"]');
 		}
 
 		if (redirectTag) {
 			let redirectLink = redirectTag.getAttribute("href");
 			if (redirectLink) {
-				if (data.userStatus == "off") {
+				if (userStatus == "off") {
 					localStorage.removeItem("user_id");
 					localStorage.removeItem("token");
 				}
@@ -243,12 +257,12 @@ const CoCreateUser = {
 			}
 		}
 
-		if (data.userStatus) {
+		if (userStatus) {
 			let sessionElements = document.querySelectorAll(
 				'[session]:not([session="true"], [session="false"])'
 			);
 			for (let i = 0; i < sessionElements.length; i++)
-				sessionElements[i].setAttribute("session", data.userStatus);
+				sessionElements[i].setAttribute("session", userStatus);
 		}
 	},
 
