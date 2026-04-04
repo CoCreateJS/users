@@ -1,3 +1,10 @@
+## [1.39.4](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.3...v1.39.4) (2026-04-04)
+
+
+### Bug Fixes
+
+* improved ([6f0003b](https://github.com/CoCreate-app/CoCreate-users/commit/6f0003b6b151886e88d53de3271f63dde61d7e28))
+
 ## [1.39.3](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.2...v1.39.3) (2026-04-04)
 
 
