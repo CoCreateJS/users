@@ -1,3 +1,10 @@
+## [1.39.2](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.1...v1.39.2) (2026-04-04)
+
+
+### Bug Fixes
+
+* await user creation and set userKey if provided ([5048619](https://github.com/CoCreate-app/CoCreate-users/commit/50486192da29d2f68a05bbab7c6c0eae5825e081))
+
 ## [1.39.1](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.0...v1.39.1) (2026-04-04)
 
 
