@@ -1,3 +1,10 @@
+## [1.39.1](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.0...v1.39.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* property access for user object in client.js ([94369a5](https://github.com/CoCreate-app/CoCreate-users/commit/94369a56dc78ee5cc3aaa9449e1a88c62ddf2c8d))
+
 # [1.39.0](https://github.com/CoCreate-app/CoCreate-users/compare/v1.38.6...v1.39.0) (2026-04-04)
 
 
