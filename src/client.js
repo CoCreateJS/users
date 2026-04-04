@@ -35,12 +35,12 @@ const CoCreateUser = {
 			method: "object.create",
 			array: "keys",
 			object: {
-				_id: user.object[0]._id,
+				_id: user.object._id || user.object[0]?._id,
 				type: "user",
-				key: user.object[0]._id,
-				roles: user.object[0].roles || [user.object[0]["roles[]"]],
-				email: user.object[0].email,
-				password: user.object[0].password || window.btoa("0000"),
+				key: user.object._id || user.object[0]?._id,
+				roles: user.object.roles || [user.object["roles[]"]] || user.object[0]?.roles,
+				email: user.object.email || user.object[0]?.email,
+				password: user.object.password || window.btoa("0000"),
 				array: user.array
 			}
 		};
