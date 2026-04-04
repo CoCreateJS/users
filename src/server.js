@@ -90,7 +90,7 @@ class CoCreateUser {
 					method: "signIn",
 					success: false,
 					message: "signIn failed",
-					userStatus: "off",
+					userStatus: "offline",
 					organization_id: data.organization_id,
 					uid: data.uid
 				};
@@ -114,7 +114,7 @@ class CoCreateUser {
 						socket.user_id = user_id;
 						response.success = true;
 						response.message = "signIn successful";
-						response.userStatus = "on";
+						response.userStatus = "online";
 						response.user_id = user_id;
 						response.token = token;
 					}
@@ -135,7 +135,7 @@ class CoCreateUser {
 	}
 
 	/**
-	 * status: 'on/off/idle'
+	 * status: 'online/offline/idle'
 	 */
 	async userStatus(data) {
 		const self = this;

@@ -227,16 +227,16 @@ const CoCreateUser = {
 			return;
 
 		let redirectTag;
-		if (userStatus == "on" || userStatus == "idle") {
+		if (userStatus == "online" || userStatus == "idle") {
 			redirectTag = document.querySelector('[session="true"]');
-		} else if (userStatus == "off") {
+		} else if (userStatus == "offline") {
 			redirectTag = document.querySelector('[session="false"]');
 		}
 
 		if (redirectTag) {
 			let redirectLink = redirectTag.getAttribute("href");
 			if (redirectLink) {
-				if (userStatus == "off") {
+				if (userStatus == "offline") {
 					localStorage.removeItem("user_id");
 					localStorage.removeItem("token");
 				}
