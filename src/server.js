@@ -41,6 +41,10 @@ class CoCreateUser {
 			if (data.user) {
 				data.user.method = "object.create";
 				data.user.host = data.host;
+				if (!data.user.organization_id) {
+					data.user.organization_id = data.organization_id;
+					data.userKey.organization_id = data.organization_id;
+				}
 				let createdUser = await this.crud.send(data.user);
 				if (data.userKey && createdUser.object[0] && createdUser.object[0]._id) {
 					data.userKey.object.key = createdUser.object[0]._id;
@@ -50,6 +54,9 @@ class CoCreateUser {
 			if (data.userKey) {
 				data.userKey.method = "object.create";
 				data.userKey.host = data.host;
+				if (!data.userKey.organization_id) {
+					data.userKey.organization_id = data.organization_id;
+				}
 				await this.crud.send(data.userKey);
 			}
 
