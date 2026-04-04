@@ -26,6 +26,23 @@ class CoCreateUser {
 		}
 	}
 
+	/**
+	 * Handles the user sign-up process by performing identity validation, 
+	 * contact record synchronization, and credential attachment.
+	 * * @async
+	 * @function signUp
+	 * @param {Object} data - The sign-up data payload.
+	 * @param {Object} data.socket - The client socket identifier.
+	 * @param {string} data.host - The host address.
+	 * @param {string} data.organization_id - The ID of the organization.
+	 * @param {string} data.uid - Unique identifier for the request.
+	 * @param {Object} [data.user] - The User/Contact object to be created or updated.
+	 * @param {Object} data.user.object - The actual contact data (name, email, _id, etc.).
+	 * @param {Object} [data.userKey] - The credential/login object to be created.
+	 * @param {Object} data.userKey.object - The credential data (password, etc.).
+	 * @returns {Promise<void>} - Sends the result status via this.wsManager.
+	 */
+
 	async signUp(data) {
 		try {
 			let response = {
@@ -38,32 +55,85 @@ class CoCreateUser {
 				uid: data.uid
 			};
 
+			const targetEmail = data.user?.object?.email;
+			const targetId = data.user?.object?._id;
+
+			// --- STEP 1: The Ultimate Gatekeeper Check ---
+			// We look in the 'keys' array to see if this email OR this ID is already registered.
+			// If they pass this test, we are clear to proceed with creation.
+			const keyCheck = await this.crud.send({
+				method: "object.read",
+				array: "keys",
+				$filter: { 
+					limit: 1,
+					query: {
+						$or: [
+							{ "email": targetEmail },
+							{ "key": targetId }
+						]
+					}
+				}
+			});
+
+			// Detailed error messaging for the user
+			if (keyCheck?.object?.length > 0) {
+				const match = keyCheck.object[0];
+
+				if (match.email === targetEmail && match.key !== targetId) {
+					response.message = "Email is already in use with another account";
+				} else if (match.key === targetId) {
+					response.message = "You already have an account, try signing in instead";
+				} else {
+					response.message = "An account with these details already exists";
+				}
+
+				this.wsManager.send(response);
+				return; // Exit early: Gatekeeper blocked the sign-up.
+			}
+
+			// --- STEP 2: Resolve or Create the Contact ---
+			// Since Step 1 passed, we can safely upsert the contact record.
 			if (data.user) {
-				data.user.method = "object.create";
+				data.user.method = "object.update";
 				data.user.host = data.host;
+				data.user.upsert = true; 
+
 				if (!data.user.organization_id) {
 					data.user.organization_id = data.organization_id;
-					data.userKey.organization_id = data.organization_id;
 				}
-				let createdUser = await this.crud.send(data.user);
-				if (data.userKey && createdUser.object[0] && createdUser.object[0]._id) {
-					data.userKey.object.key = createdUser.object[0]._id;
+
+				let userResult = await this.crud.send(data.user);
+
+				// --- STEP 3: Create the Key ---
+				// Uniqueness is already guaranteed by Step 1, so we just perform the creation.
+				if (data.userKey && userResult.object?.[0]?._id) {
+					const resolvedUserId = userResult.object[0]._id;
+
+					data.userKey.method = "object.create";
+					data.userKey.host = data.host;
+					data.userKey.object.key = resolvedUserId;
+					data.userKey.object.email = targetEmail;
+
+					if (!data.userKey.organization_id) {
+						data.userKey.organization_id = data.organization_id;
+					}
+
+					// Get the result and check for an ID to confirm success
+					let createdKey = await this.crud.send(data.userKey);
+					
+					if (createdKey.object?.[0]?._id) {
+						response.success = true;
+						response.message = "signUp successful";
+					} else {
+						response.message = "Account creation failed at credential stage";
+					}
+				} else {
+					response.message = "Account creation failed at user stage";
 				}
 			}
-
-			if (data.userKey) {
-				data.userKey.method = "object.create";
-				data.userKey.host = data.host;
-				if (!data.userKey.organization_id) {
-					data.userKey.organization_id = data.organization_id;
-				}
-				await this.crud.send(data.userKey);
-			}
-
-			response.success = true;
-			response.message = "signUp successful";
 
 			this.wsManager.send(response);
+
 		} catch (error) {
 			console.log("signup error", error);
 		}

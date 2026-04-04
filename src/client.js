@@ -35,7 +35,6 @@ const CoCreateUser = {
 			method: "object.create",
 			array: "keys",
 			object: {
-				_id: user.object._id || user.object[0]?._id,
 				type: "user",
 				key: user.object._id || user.object[0]?._id,
 				roles: user.object.roles || [user.object["roles[]"]] || user.object[0]?.roles,
