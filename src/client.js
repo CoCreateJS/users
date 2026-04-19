@@ -9,6 +9,7 @@ import "./index.css";
 
 // TODO: Replace with @cocreate/config.
 import localStorage from "@cocreate/local-storage";
+import Config from "@cocreate/config";
 
 const CoCreateUser = {
 	organization_id: async () => {
@@ -177,10 +178,15 @@ const CoCreateUser = {
 
 	},
 
-	signOut: (action) => {
-		self = this;
-		localStorage.removeItem("user_id");
+		signOut: function (action) {
+		// Remove user_id via Config to clear cookies and CoCreateConfig
+		Config.remove("user_id");
+		// token can remain in localStorage removal
 		localStorage.removeItem("token");
+		if (Crud && Crud.socket) {
+			Crud.socket.user_id = null;
+			if (Crud.socket.token) Crud.socket.token = null;
+		}
 
 		render({
 			selector: "[template*='signOut']",
@@ -193,7 +199,6 @@ const CoCreateUser = {
 			]
 		});
 
-		// TODO: replace with Custom event system
 		action.element.dispatchEvent(new CustomEvent("signOut"));
 	},
 
@@ -236,8 +241,9 @@ const CoCreateUser = {
 			let redirectLink = redirectTag.getAttribute("href");
 			if (redirectLink) {
 				if (userStatus == "offline") {
-					localStorage.removeItem("user_id");
+					Config.removeItem("user_id");
 					localStorage.removeItem("token");
+					if (Crud && Crud.socket) Crud.socket.user_id = null;
 				}
 
 				// Normalize both URLs to compare paths in a uniform way
