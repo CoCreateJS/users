@@ -94,12 +94,15 @@ class CoCreateUser {
 			// --- STEP 2: Resolve or Create the Contact ---
 			// Since Step 1 passed, we can safely upsert the contact record.
 			if (data.user) {
-				data.user.method = "object.update";
+				data.user.method = "object.create";
 				data.user.host = data.host;
-				data.user.upsert = true; 
 
 				if (!data.user.organization_id) {
 					data.user.organization_id = data.organization_id;
+				}
+
+				if (data.user.object) {
+					delete data.user.object.password; // Remove _id to avoid conflicts during creation
 				}
 
 				let userResult = await this.crud.send(data.user);
@@ -199,6 +202,7 @@ class CoCreateUser {
 						response.token = token;
 					}
 				}
+				
 				self.wsManager.send(response);
 				self.wsManager.send({
 					socket,
@@ -221,7 +225,23 @@ class CoCreateUser {
 		const self = this;
 		try {
 			if (data.user_id && data.userStatus) {
-				data.array = "users";
+				let targetArray = "users"; // default fallback
+				let keyData = await this.crud.send({
+					method: "object.read",
+					host: data.host,
+					array: "keys",
+					$filter: {
+						query: { key: data.user_id },
+						limit: 1
+					},
+					organization_id: data.organization_id || (data.socket && data.socket.organization_id)
+				});
+
+				if (keyData && keyData.object && keyData.object.length > 0 && keyData.object[0].array) {
+					targetArray = keyData.object[0].array;
+				}
+
+				data.array = targetArray;
 				data["object"] = {
 					_id: data.user_id,
 					userStatus: data.userStatus
@@ -240,7 +260,7 @@ class CoCreateUser {
 						userStatus: data.userStatus,
 						token: data.token,
 						organization_id:
-							data.organization_id || socket.organization_id
+							data.organization_id || (data.socket && data.socket.organization_id)
 					});
 			} else if (data.socket)
 				data.socket.send(
@@ -252,7 +272,7 @@ class CoCreateUser {
 						clientId: data.clientId,
 						token: data.token,
 						organization_id:
-							data.organization_id || socket.organization_id
+							data.organization_id || (data.socket && data.socket.organization_id)
 					})
 				);
 		} catch (error) {
@@ -280,8 +300,24 @@ class CoCreateUser {
 			let uid = data.uid;
 			delete data.uid;
 
+			let targetArray = "users"; // default fallback
+			let keyData = await this.crud.send({
+				method: "object.read",
+				host: data.host,
+				array: "keys",
+				$filter: {
+					query: { key: data.user_id },
+					limit: 1
+				},
+				organization_id: data.organization_id || (data.socket && data.socket.organization_id)
+			});
+
+			if (keyData && keyData.object && keyData.object.length > 0 && keyData.object[0].array) {
+				targetArray = keyData.object[0].array;
+			}
+
 			data.method = "object.update";
-			data.array = "users";
+			data.array = targetArray;
 			data.object = {
 				_id: data.user_id,
 				"$push.invitations": inviteId,
