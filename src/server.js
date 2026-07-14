@@ -159,10 +159,10 @@ async function signIn(data) {
             result.object[0] &&
             result.object[0]._id &&
             server.wsManager &&
-            server.wsManager.authenticate
+            server.authenticate
         ) {
             const user_id = result.object[0].key;
-            const token = server.wsManager.authenticate.encodeToken(
+            const token = server.authenticate.encodeToken(
                 result.organization_id,
                 user_id,
                 result.clientId
@@ -623,7 +623,6 @@ function init() {
         server.wsManager.on("acceptInvite", (data) => acceptInvite(data));
         server.wsManager.on("forgotPassword", (data) => forgotPassword(data));
         server.wsManager.on("resetPassword", (data) => resetPassword(data));
-        console.log('[@cocreate/users] User event bindings successfully registered.');
     } else {
         // If the shared server orchestrator is not yet ready, check again in 500ms
         setTimeout(init, 500);
