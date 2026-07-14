@@ -1,3 +1,17 @@
+## [1.39.5](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.4...v1.39.5) (2026-07-14)
+
+
+### Bug Fixes
+
+* bump package versions ([5a13416](https://github.com/CoCreate-app/CoCreate-users/commit/5a1341674d2743422443d6702d475f6db4fdc322))
+* remove unnecessary console logs in init function for cleaner output ([4e50944](https://github.com/CoCreate-app/CoCreate-users/commit/4e509445cc8eb972afe7cb15065bc34aeda68440))
+* removed post install and add add packages to apprved list ([4ca4805](https://github.com/CoCreate-app/CoCreate-users/commit/4ca480518e6fa4320d04a77a22344e444b4c0fb0))
+* semantic version handling ([faaf8be](https://github.com/CoCreate-app/CoCreate-users/commit/faaf8beced63fbbd31b709b35d0de88916cf5bd0))
+* update dependencies and integrate @cocreate/config for user management ([810ca32](https://github.com/CoCreate-app/CoCreate-users/commit/810ca3290a2005a28fb9eda5ef0b9f9180b7df0f))
+* update module export to ES6 syntax in release.config.js ([b3b0ba3](https://github.com/CoCreate-app/CoCreate-users/commit/b3b0ba3a99441bec2f5481013d88b9578a346df3))
+* update package.json to use ESM and restructure entry points ([7da48f2](https://github.com/CoCreate-app/CoCreate-users/commit/7da48f2eb2630eb91df496977885e9880cd5b09d))
+* update user creation to avoid conflicts and ensure correct array targeting ([4a5117f](https://github.com/CoCreate-app/CoCreate-users/commit/4a5117f4a24c1b9a8bacfb1cda9eba47b5cda6ac))
+
 ## [1.39.4](https://github.com/CoCreate-app/CoCreate-users/compare/v1.39.3...v1.39.4) (2026-04-04)
 
 
