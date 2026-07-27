@@ -177,8 +177,8 @@ const CoCreateUser = {
 
     signOut: function (action) {
         // Synchronously evict user configuration metadata
-        Config.remove("user_id");
-        Config.remove("token");
+        Config.delete("user_id");
+        Config.delete("token");
         
         if (Crud && Crud.socket) {
             Crud.socket.user_id = null;
@@ -238,9 +238,8 @@ const CoCreateUser = {
             let redirectLink = redirectTag.getAttribute("href");
             if (redirectLink) {
                 if (userStatus == "offline") {
-                    // Corrected bug: Changed legacy or non-existent .removeItem() to standard .remove()
-                    Config.remove("user_id");
-                    Config.remove("token");
+                    Config.delete("user_id");
+                    Config.delete("token");
                     if (Crud && Crud.socket) Crud.socket.user_id = null;
                 }
 
