@@ -53,7 +53,7 @@
     "@cocreate/elements": "^1.44.0",
     "@cocreate/local-storage": "^1.18.0",
     "@cocreate/render": "^1.49.0",
-    "@cocreate/server": "^1.8.0"
+    "@cocreate/server": "^1.9.0"
   },
   "devDependencies": {
     "@cocreate/webpack": "^1.7.0"
