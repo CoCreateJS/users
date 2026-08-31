@@ -165,11 +165,19 @@ async function signIn(data) {
             const token = server.authenticate.encodeToken(
                 result.organization_id,
                 user_id,
-                result.clientId
+                result.clientId,
+                result.host
             );
 
             if (token && token !== "null") {
+                const session = await server.authenticate.decodeToken(
+                    token,
+                    result.organization_id,
+                    result.clientId,
+                    result.host
+                );
                 socket.user_id = user_id;
+                socket.expires = session.expires;
                 response.success = true;
                 response.message = "signIn successful";
                 response.userStatus = "online";
