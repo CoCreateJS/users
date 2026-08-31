@@ -49,7 +49,7 @@ async function signUp(data) {
         const keyCheck = await server.crud.send({
             method: "object.read",
             array: "keys",
-            $filter: { 
+            filter: { 
                 limit: 1,
                 query: {
                     $or: [
@@ -215,7 +215,7 @@ async function userStatus(data) {
                 method: "object.read",
                 host: data.host,
                 array: "keys",
-                $filter: {
+                filter: {
                     query: { key: data.user_id },
                     limit: 1
                 },
@@ -301,7 +301,7 @@ async function inviteUser(data) {
             method: "object.read",
             host: data.host,
             array: "keys",
-            $filter: {
+            filter: {
                 query: { key: data.user_id },
                 limit: 1
             },
@@ -329,7 +329,7 @@ async function inviteUser(data) {
             method: "object.read",
             host: updatedData.host,
             array: "users",
-            $filter: {
+            filter: {
                 query: { email: updatedData.email },
                 limit: 1
             },
@@ -427,7 +427,7 @@ async function acceptInvite(data) {
             "$pull.invitations": data.token,
             "$pull.members": data.email
         };
-        data.$filter = {
+        data.filter = {
             query: {
                 invitations: { $in: [data.token] },
                 members: { $in: [data.email] }
@@ -452,7 +452,7 @@ async function acceptInvite(data) {
 
         for (let object of updatedData.object) {
             if (object._id) {
-                delete updatedData.$filter;
+                delete updatedData.filter;
                 updatedData.object = {
                     _id: object._id,
                     "$addToSet.members": updatedData.user_id
@@ -496,7 +496,7 @@ async function forgotPassword(data) {
         data.method = "object.update";
         data.array = "keys";
         data.object = { recoveryId };
-        data.$filter = {
+        data.filter = {
             query: { email: data.email },
             limit: 1
         };
@@ -582,7 +582,7 @@ async function resetPassword(data) {
         data.method = "object.update";
         data.array = "keys";
         data.object = { password: data.password, recoveryId: "" };
-        data.$filter = {
+        data.filter = {
             query: { email: data.email, recoveryId: data.token },
             limit: 1
         };

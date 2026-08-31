@@ -107,7 +107,7 @@ const CoCreateUser = {
         let request = {
             method: "object.read",
             array: "keys",
-            $filter: {
+            filter: {
                 query
             }
         };
