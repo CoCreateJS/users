@@ -60,7 +60,7 @@ const CoCreateUser = {
                 method: "signUp",
                 user,
                 userKey,
-                broadcastBrowser: false
+                broadcastClient: false
             };
             
             Crud.socket.send(request).then((response) => {
@@ -132,7 +132,7 @@ const CoCreateUser = {
             });
         } else {
             request.method = "signIn";
-            request.broadcastBrowser = false;
+            request.broadcastClient = false;
             delete request.storage;
             Crud.socket.send(request).then((response) => {
                 this.signInResponse(response, action);
@@ -276,7 +276,7 @@ const CoCreateUser = {
                 method: "checkSession",
                 broadcast: false,
                 broadcastSender: false,
-                broadcastBrowser: false
+                broadcastClient: false
             });
         }
     },
@@ -500,7 +500,7 @@ function checkSession() {
         Crud.socket.send({
             method: "checkSession",
             broadcast: false,
-            broadcastBrowser: false
+            broadcastClient: false
         });
     }, 500);
 }

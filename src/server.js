@@ -49,7 +49,7 @@ async function signUp(data) {
         const keyCheck = await server.crud.send({
             method: "object.read",
             array: "keys",
-            filter: { 
+            filter: {
                 limit: 1,
                 query: {
                     $or: [
@@ -108,7 +108,7 @@ async function signUp(data) {
 
                 // Get the result and check for an ID to confirm success
                 let createdKey = await server.crud.send(data.userKey);
-                
+
                 if (createdKey.object?.[0]?._id) {
                     response.success = true;
                     response.message = "signUp successful";
@@ -185,7 +185,7 @@ async function signIn(data) {
                 response.token = token;
             }
         }
-        
+
         if (server.wsManager) {
             server.wsManager.send(response);
             server.wsManager.send({
@@ -293,7 +293,7 @@ async function inviteUser(data) {
         if (!server || !server.crud) return;
 
         const inviteId = server.crud.ObjectId().toString();
-        let  uuid = data.uuid;
+        let uuid = data.uuid;
         delete data.uuid;
 
         let targetArray = "users"; // default fallback
@@ -393,7 +393,7 @@ async function inviteUser(data) {
             success: true,
             message: "Successfully sent invite",
             organization_id: updatedData.organization_id,
-             uuid
+            uuid
         };
 
         if (server.wsManager) {
@@ -418,7 +418,7 @@ async function acceptInvite(data) {
             return;
         }
 
-        let  uuid = data.uuid;
+        let uuid = data.uuid;
         delete data.uuid;
 
         data.method = "object.update";
@@ -447,7 +447,7 @@ async function acceptInvite(data) {
             message:
                 "The token is invalid or has expired. However, you can still access your account. Please request a new invite to proceed, and feel free to explore the available features while you wait.",
             organization_id: updatedData.organization_id,
-             uuid
+            uuid
         };
 
         for (let object of updatedData.object) {
@@ -510,7 +510,7 @@ async function forgotPassword(data) {
             success: false,
             message: "Email does not exist",
             organization_id: result.organization_id,
-             uuid: result.uuid
+            uuid: result.uuid
         };
 
         for (let object of result.object) {
@@ -596,7 +596,7 @@ async function resetPassword(data) {
             success: false,
             message: "Token is invalid or has expired",
             organization_id: result.organization_id,
-             uuid: result.uuid
+            uuid: result.uuid
         };
 
         for (let object of result.object) {
