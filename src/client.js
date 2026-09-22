@@ -1,4 +1,4 @@
-/*globals CustomEvent, btoa*/
+/*globals btoa*/
 import Crud from "@cocreate/crud-client";
 import Actions from "@cocreate/actions";
 import Elements from "@cocreate/elements";
@@ -14,8 +14,24 @@ const CoCreateUser = {
     },
 
     init: function () {
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.addEventListener("message", (event) => {
+                if (event.data?.action === "getSessionToken" && event.ports[0]) {
+                    event.ports[0].postMessage({ token: Config.get("token") || null });
+                }
+            });
+        }
         this.initSocket();
         this.initSession();
+        const token = Config.get("token");
+        if (token) this.setSessionCookie(token);
+    },
+
+    setSessionCookie: function (token) {
+        let cookie = `token=${token ? encodeURIComponent(token) : ""}; Path=/; SameSite=Lax`;
+        if (window.location.protocol === "https:") cookie += "; Secure";
+        if (!token) cookie += "; Max-Age=0";
+        document.cookie = cookie;
     },
 
     initSocket: function () {
@@ -24,7 +40,7 @@ const CoCreateUser = {
     },
 
     signUp: async function (action) {
-        if (!action.form) return;
+        if (!action.form) throw new Error("A form is required");
 
         let data = await Elements.getData(action.form);
         let user = data[0];
@@ -52,9 +68,10 @@ const CoCreateUser = {
             user.method = "object.create";
             await Crud.send(user);
             let response = await Crud.send(userKey);
-            if (response && response.object && response.object[0]) {
-                this.signUpResponse(response, action);
-            }
+            this.signUpResponse({
+                ...response,
+                success: !response?.error && Boolean(response?.object?.[0]?._id)
+            }, action);
         } else {
             let request = {
                 method: "signUp",
@@ -62,34 +79,19 @@ const CoCreateUser = {
                 userKey,
                 broadcastClient: false
             };
-            
-            Crud.socket.send(request).then((response) => {
+
+            return Crud.socket.send(request).then((response) => {
                 this.signUpResponse(response, action);
             });
         }
     },
 
     signUpResponse: function (response, action) {
-        render({
-            selector: "[template*='signUp']",
-            data: [
-                {
-                    type: "signUp",
-                    message: "Succesfully Signed Up",
-                    success: true
-                }
-            ]
-        });
-
-        action.element.dispatchEvent(
-            new CustomEvent("signUp", {
-                detail: response
-            })
-        );
+        finishAction(action, response);
     },
 
     signIn: async function (action) {
-        if (!action.form) return;
+        if (!action.form) throw new Error("A form is required");
         let query = {};
 
         const inputs = action.form.querySelectorAll(
@@ -97,7 +99,7 @@ const CoCreateUser = {
         );
         for (let i = 0; i < inputs.length; i++) {
             const key = inputs[i].getAttribute("key");
-            if (key === "password" && inputs[i].type === "text") { 
+            if (key === "password" && inputs[i].type === "text") {
                 inputs[i].type = "password"
             }
             const value = await inputs[i].getValue();
@@ -119,7 +121,7 @@ const CoCreateUser = {
             (window && !window.navigator.onLine) ||
             Crud.socket.serverOrganization == false
         ) {
-            Crud.send(request).then((response) => {
+            return Crud.send(request).then((response) => {
                 response["success"] = false;
                 response["status"] = "signIn failed";
                 response["message"] = "offline";
@@ -134,7 +136,7 @@ const CoCreateUser = {
             request.method = "signIn";
             request.broadcastClient = false;
             delete request.storage;
-            Crud.socket.send(request).then((response) => {
+            return Crud.socket.send(request).then((response) => {
                 this.signInResponse(response, action);
             });
         }
@@ -150,56 +152,39 @@ const CoCreateUser = {
             Config.set("host", Crud.socket.host);
             Config.set("user_id", user_id);
             Config.set("token", token);
-            message = "Successful signIn";
+            this.setSessionCookie(token);
+            message = message || "Successfully signed in";
             Crud.socket.user_id = user_id;
         } else if (!message) {
             message = "The email or password you entered is incorrect";
         }
 
-        render({
-            selector: "[template*='signIn']",
-            data: [
-                {
-                    type: "signIn",
-                    status,
-                    message,
-                    success
-                }
-            ]
-        });
-
-        action.element.dispatchEvent(
-            new CustomEvent("signIn", {
-                detail: {}
-            })
-        );
+        finishAction(action, { ...data, message });
     },
 
     signOut: function (action) {
         // Synchronously evict user configuration metadata
         Config.delete("user_id");
         Config.delete("token");
-        
+        this.setSessionCookie(null);
+
         if (Crud && Crud.socket) {
             Crud.socket.user_id = null;
             if (Crud.socket.token) Crud.socket.token = null;
         }
 
-        render({
-            selector: "[template*='signOut']",
-            data: [
-                {
-                    type: "signOut",
-                    message: "Succesfully logged out",
-                    success: true
-                }
-            ]
+        finishAction(action, {
+            success: true,
+            message: "Successfully logged out"
         });
-
-        action.element.dispatchEvent(new CustomEvent("signOut"));
     },
 
     updateUserStatus: function (data) {
+        if (data.user_id === Crud.socket.user_id &&
+            (data.userStatus === "online" || data.userStatus === "idle")) {
+            const token = Config.get("token");
+            if (token) this.setSessionCookie(token);
+        }
         this.redirect(data);
         let statusEls;
         if (data.user_id) {
@@ -240,6 +225,7 @@ const CoCreateUser = {
                 if (userStatus == "offline") {
                     Config.delete("user_id");
                     Config.delete("token");
+                    CoCreateUser.setSessionCookie(null);
                     if (Crud && Crud.socket) Crud.socket.user_id = null;
                 }
 
@@ -283,7 +269,7 @@ const CoCreateUser = {
 
     inviteUser: async function (action) {
         let email = action.form.querySelector('input[key="email"]');
-        if (!email) return;
+        if (!email) throw new Error("An email field is required");
         else email = await email.getValue();
 
         let name = action.form.querySelector('input[key="name"]');
@@ -313,21 +299,8 @@ const CoCreateUser = {
             path
         };
 
-        Crud.socket.send(request).then((response) => {
-            if (response.success)
-                action.element.dispatchEvent(new CustomEvent("inviteUser"));
-
-            render({
-                selector: "[template*='inviteUser']",
-                data: [
-                    {
-                        type: "inviteUser",
-                        message: response.message,
-                        success: response.success
-                    }
-                ]
-            });
-        });
+        const response = await Crud.socket.send(request);
+        finishAction(action, response);
     },
 
     acceptInvite: async function (action) {
@@ -349,23 +322,12 @@ const CoCreateUser = {
             data.message = "Invitation failed";
         }
 
-        if (data.success)
-            action.element.dispatchEvent(new CustomEvent("acceptInvite"));
-        render({
-            selector: "[template*='acceptInvite']",
-            data: [
-                {
-                    type: "acceptInvite",
-                    message: data.message,
-                    success: data.success
-                }
-            ]
-        });
+        finishAction(action, data);
     },
 
     forgotPassword: async function (action) {
         let email = action.form.querySelector('input[key="email"]');
-        if (!email) return;
+        if (!email) throw new Error("An email field is required");
         else email = await email.getValue();
 
         let from = action.form.querySelector('input[key="from"]');
@@ -391,20 +353,8 @@ const CoCreateUser = {
             path
         };
 
-        Crud.socket.send(request).then((response) => {
-            if (response.success)
-                action.element.dispatchEvent(new CustomEvent("forgotPassword"));
-            render({
-                selector: "[template*='forgotPassword']",
-                data: [
-                    {
-                        type: "forgotPassword",
-                        message: response.message,
-                        success: response.success
-                    }
-                ]
-            });
-        });
+        const response = await Crud.socket.send(request);
+        finishAction(action, response);
     },
 
     resetPassword: async function (action) {
@@ -413,85 +363,67 @@ const CoCreateUser = {
         };
         let email = action.form.querySelector('input[key="email"]');
         if (email) data.email = await email.getValue();
-        else return;
+        else throw new Error("A email field is required");
 
         let password = action.form.querySelector('input[key="password"]');
         if (password) data.password = await password.getValue();
-        else return;
+        else throw new Error("A password field is required");
 
         let token = action.form.querySelector('input[key="token"]');
         if (token) data.token = await token.getValue();
-        else return;
+        else throw new Error("A token field is required");
 
-        Crud.socket.send(data).then((data) => {
-            if (data.success)
-                action.element.dispatchEvent(new CustomEvent("resetPassword"));
-            else
-                render({
-                    selector: "[template*='resetPassword']",
-                    data: [
-                        {
-                            type: "resetPassword",
-                            message: data.message,
-                            success: data.success
-                        }
-                    ]
-                });
-        });
+        const response = await Crud.socket.send(data);
+        finishAction(action, response);
     }
 };
 
-Actions.init([
-    {
-        name: "signUp",
-        endEvent: "signUp",
-        callback: (action) => {
-            CoCreateUser.signUp(action);
+const successMessages = {
+    signUp: "Successfully signed up",
+    signIn: "Successfully signed in",
+    signOut: "Successfully logged out",
+    inviteUser: "Invitation sent",
+    acceptInvite: "Invitation accepted",
+    forgotPassword: "Password reset requested",
+    resetPassword: "Password reset successful"
+};
+
+function finishAction(action, response = {}) {
+    const success = response.success === true && !response.error;
+    if (!success) action.abort();
+
+    render({
+        selector: '[template~="notification"]',
+        data: {
+            type: action.name,
+            status: success ? "success" : "error",
+            message: response.message || (success
+                ? successMessages[action.name]
+                : "Unable to complete the request. Please try again."),
+            success
         }
-    },
-    {
-        name: "signIn",
-        endEvent: "signIn",
-        callback: (action) => {
-            CoCreateUser.signIn(action);
-        }
-    },
-    {
-        name: "signOut",
-        endEvent: "signOut",
-        callback: (action) => {
-            CoCreateUser.signOut(action);
-        }
-    },
-    {
-        name: "inviteUser",
-        endEvent: "inviteUser",
-        callback: (action) => {
-            CoCreateUser.inviteUser(action);
-        }
-    },
-    {
-        name: "acceptInvite",
-        endEvent: "acceptInvite",
-        callback: (action) => {
-            CoCreateUser.acceptInvite(action);
-        }
-    },
-    {
-        name: "forgotPassword",
-        endEvent: "forgotPassword",
-        callback: (action) => {
-            CoCreateUser.forgotPassword(action);
-        }
-    },
-    {
-        name: "resetPassword",
-        endEvent: "resetPassword",
-        callback: (action) => {
-            CoCreateUser.resetPassword(action);
+    });
+
+    if (success) action.end(response);
+}
+
+Actions.init(Object.keys(successMessages).map((name) => ({
+    name,
+    endEvent: name,
+    callback: async (action) => {
+        try {
+            if (name !== "signOut" && !action.form) {
+                throw new Error("A form is required");
+            }
+            await CoCreateUser[name](action);
+        } catch (error) {
+            finishAction(action, {
+                success: false,
+                message: error.message || "Unable to complete the request. Please try again."
+            });
         }
     }
-]);
+})));
 
 let checkSessionTimeout;
 function checkSession() {
