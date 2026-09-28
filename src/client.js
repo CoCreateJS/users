@@ -44,16 +44,37 @@ const CoCreateUser = {
 
         let data = await Elements.getData(action.form);
         let user = data[0];
+        if (!user) throw new Error("No user data was found in the signup form");
+
+        const userObject = Array.isArray(user.object)
+            ? (user.object[0] ||= {})
+            : (user.object ||= {});
+        const credentials = {};
+        const credentialInputs = action.form.querySelectorAll(
+            'input[key="email"], input[key="password"]'
+        );
+        for (const input of credentialInputs) {
+            const key = input.getAttribute("key");
+            if (key === "password" && input.type === "text") {
+                input.type = "password";
+            }
+            credentials[key] = await input.getValue();
+        }
+        Object.assign(userObject, credentials);
+
+        if (!credentials.email || !credentials.password) {
+            throw new Error("Email and password are required for signup");
+        }
 
         let userKey = {
             method: "object.create",
             array: "keys",
             object: {
                 type: "user",
-                key: user.object._id || user.object[0]?._id,
-                roles: user.object.roles || [user.object["roles[]"]] || user.object[0]?.roles,
-                email: user.object.email || user.object[0]?.email,
-                password: user.object.password || window.btoa("0000"),
+                key: userObject._id,
+                roles: userObject.roles || [userObject["roles[]"]],
+                email: credentials.email,
+                password: credentials.password,
                 array: user.array
             }
         };

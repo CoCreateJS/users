@@ -21,7 +21,7 @@
 // you must obtain a commercial license from CoCreate LLC.
 // For details, visit <https://cocreate.app/licenses/> or contact us at sales@cocreate.app.
 
-import server from '@cocreate/server';
+let server;
 
 /**
  * Handles the user sign-up process by performing identity validation, 
@@ -39,8 +39,11 @@ async function signUp(data) {
             uuid: data.uuid
         };
 
-        const targetEmail = data.user?.object?.email;
-        const targetId = data.user?.object?._id;
+        const userObject = Array.isArray(data.user?.object)
+            ? data.user.object[0]
+            : data.user?.object;
+        const targetEmail = userObject?.email ?? data.userKey?.object?.email;
+        const targetId = userObject?._id;
 
         // --- STEP 1: The Ultimate Gatekeeper Check ---
         // We look in the 'keys' array to see if this email OR this ID is already registered.
@@ -87,8 +90,8 @@ async function signUp(data) {
                 data.user.organization_id = data.organization_id;
             }
 
-            if (data.user.object) {
-                delete data.user.object.password; // Remove password attribute to avoid plain text database leakage
+            if (userObject) {
+                delete userObject.password; // Remove password attribute to avoid plain text database leakage
             }
 
             let userResult = await server.crud.send(data.user);
@@ -615,29 +618,21 @@ async function resetPassword(data) {
     }
 }
 
-/**
- * Auto-initialization loop.
- * Silently polls to verify that the unified server orchestrator is fully loaded,
- * and that both the database (crud) and socket manager (wsManager) have completed
- * their initial handshakes, then attaches active user event triggers.
- */
-function init() {
-    if (server && server.isInitialized && server.crud && server.wsManager) {
-        server.wsManager.on("signUp", (data) => signUp(data));
-        server.wsManager.on("signIn", (data) => signIn(data));
-        server.wsManager.on("userStatus", (data) => userStatus(data));
-        server.wsManager.on("checkSession", (data) => checkSession(data));
-        server.wsManager.on("inviteUser", (data) => inviteUser(data));
-        server.wsManager.on("acceptInvite", (data) => acceptInvite(data));
-        server.wsManager.on("forgotPassword", (data) => forgotPassword(data));
-        server.wsManager.on("resetPassword", (data) => resetPassword(data));
-    } else {
-        // If the shared server orchestrator is not yet ready, check again in 500ms
-        setTimeout(init, 500);
+function init(serverInstance) {
+    if (!serverInstance?.crud || !serverInstance?.wsManager) {
+        throw new Error("[@cocreate/users] init requires a server with crud and wsManager.");
     }
-}
 
-// Auto-execute initialization instantly upon module load
-init();
+    server = serverInstance;
+    server.wsManager.on("signUp", (data) => signUp(data));
+    server.wsManager.on("signIn", (data) => signIn(data));
+    server.wsManager.on("userStatus", (data) => userStatus(data));
+    server.wsManager.on("checkSession", (data) => checkSession(data));
+    server.wsManager.on("inviteUser", (data) => inviteUser(data));
+    server.wsManager.on("acceptInvite", (data) => acceptInvite(data));
+    server.wsManager.on("forgotPassword", (data) => forgotPassword(data));
+    server.wsManager.on("resetPassword", (data) => resetPassword(data));
+    return server;
+}
 
 export default init;
