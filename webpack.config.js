@@ -7,7 +7,7 @@ module.exports = async (env, argv) => {
 	const isProduction = argv && argv.mode === "production";
 	const config = {
 		entry: {
-			"CoCreate-users": "./src/index.js"
+			"CoCreate-users": "./src/client/index.js"
 		},
 		output: {
 			path: path.resolve(__dirname, "dist"),
