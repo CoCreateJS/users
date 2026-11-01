@@ -24,8 +24,10 @@
 let server;
 
 /**
- * Handles the user sign-up process by performing identity validation, 
+ * Handles the user sign-up process by performing identity validation,
  * contact record synchronization, and credential attachment.
+ * @private
+ * @environment server
  */
 async function signUp(data) {
     try {
@@ -135,6 +137,8 @@ async function signUp(data) {
 /**
  * Executes credential matching queries, assigns socket-level identifiers,
  * and encodes secure session web tokens.
+ * @private
+ * @environment server
  */
 async function signIn(data) {
     try {
@@ -207,6 +211,8 @@ async function signIn(data) {
 
 /**
  * Updates dynamic user activity indicators ('online', 'offline', 'idle').
+ * @private
+ * @environment server
  */
 async function userStatus(data) {
     try {
@@ -272,6 +278,8 @@ async function userStatus(data) {
 
 /**
  * Quickly checks for valid runtime credentials assigned to active client connections.
+ * @private
+ * @environment server
  */
 async function checkSession(data) {
     try {
@@ -290,6 +298,8 @@ async function checkSession(data) {
 
 /**
  * Creates, formats, and dispatches email invitations to new team collaborators.
+ * @private
+ * @environment server
  */
 async function inviteUser(data) {
     try {
@@ -413,6 +423,8 @@ async function inviteUser(data) {
 
 /**
  * Validates outstanding team tokens and connects user accounts to parent environments.
+ * @private
+ * @environment server
  */
 async function acceptInvite(data) {
     try {
@@ -487,6 +499,8 @@ async function acceptInvite(data) {
 
 /**
  * Constructs recovery parameters and sends secure password-reset tokens to verified accounts.
+ * @private
+ * @environment server
  */
 async function forgotPassword(data) {
     try {
@@ -576,6 +590,8 @@ async function forgotPassword(data) {
 
 /**
  * Validates individual recovery tokens and writes new user credentials safely.
+ * @private
+ * @environment server
  */
 async function resetPassword(data) {
     try {
@@ -636,3 +652,18 @@ function init(serverInstance) {
 }
 
 export default init;
+
+/**
+ *
+ * @name default
+ * @kind member
+ * @public
+ * @environment server
+ */
+
+/**
+ * A simple users component in vanilla javascript. Easily configured using HTML5 attributes and/or JavaScript API.
+ *
+ * @module users
+ * @environment server
+ */

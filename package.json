@@ -15,52 +15,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "cocreate": {
-    "environment": [
-      "client",
-      "server"
-    ],
-    "interface": {
-      "schemaVersion": 1,
-      "summary": "A simple users component in vanilla javascript. Easily configured using HTML5 attributes and/or JavaScript API.",
-      "client": {
-        "source": "src/client.js",
-        "declarative": {
-          "attributes": [
-            {
-              "name": "actions"
-            },
-            {
-              "name": "session"
-            },
-            {
-              "name": "user-status"
-            }
-          ],
-          "selectors": [
-            "[actions*=\"signUp\"]",
-            "[actions*=\"signIn\"]",
-            "[actions*=\"signOut\"]",
-            "[actions*=\"inviteUser\"], [actions*=\"acceptInvite\"]",
-            "[actions*=\"forgotPassword\"], [actions*=\"resetPassword\"]"
-          ]
-        },
-        "api": {
-          "exports": [
-            "default"
-          ]
-        }
-      },
-      "server": {
-        "source": "src/server.js",
-        "api": {
-          "exports": [
-            "default"
-          ]
-        }
-      }
-    }
-  },
   "scripts": {
     "start": "webpack --config webpack.config.js",
     "build": "webpack --mode=production --config webpack.config.js",
