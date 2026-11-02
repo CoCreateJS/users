@@ -8,24 +8,21 @@ export { default } from "./client/index.js";
 /**
  *
  * @name actions
- * @kind member
- * @attribute
+ * @kind attribute
  * @environment client
  */
 
 /**
  *
  * @name session
- * @kind member
- * @attribute
+ * @kind attribute
  * @environment client
  */
 
 /**
  *
  * @name user-status
- * @kind member
- * @attribute
+ * @kind attribute
  * @environment client
  */
 
