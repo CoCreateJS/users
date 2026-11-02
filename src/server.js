@@ -634,7 +634,14 @@ async function resetPassword(data) {
     }
 }
 
-function init(serverInstance) {
+/**
+ * Registers user socket handlers on a CoCreate server context.
+ * @param {Object} serverInstance - Server providing CRUD and socket services.
+ * @returns {Object} The configured server context.
+ * @public
+ * @environment server
+ */
+export function init(serverInstance) {
     if (!serverInstance?.crud || !serverInstance?.wsManager) {
         throw new Error("[@cocreate/users] init requires a server with crud and wsManager.");
     }
@@ -650,16 +657,6 @@ function init(serverInstance) {
     server.wsManager.on("resetPassword", (data) => resetPassword(data));
     return server;
 }
-
-export default init;
-
-/**
- *
- * @name default
- * @kind member
- * @public
- * @environment server
- */
 
 /**
  * A simple users component in vanilla javascript. Easily configured using HTML5 attributes and/or JavaScript API.
