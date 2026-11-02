@@ -1,3 +1,40 @@
+# [2.0.0](https://github.com/CoCreateJS/users/compare/v1.40.2...v2.0.0) (2026-11-02)
+
+
+### Bug Fixes
+
+* add Deno specific entries to .gitignore ([f0aa5bf](https://github.com/CoCreateJS/users/commit/f0aa5bf430fc4cf192ef9c0ee173b8bf5a4428f1))
+* add missing @cocreate/server dependency in package.json ([fde0e7b](https://github.com/CoCreateJS/users/commit/fde0e7b8a82b6a57542ce1035d7c42189c2b9128))
+* align user socket routing ([98ef17e](https://github.com/CoCreateJS/users/commit/98ef17e20e03be2035c2085d3d2ca267b8c18920))
+* bump [@cocreate](https://github.com/cocreate) dependencies ([bd3ca68](https://github.com/CoCreateJS/users/commit/bd3ca688ed2605ee2c8916ce56c47cbcdd8b4442))
+* bump [@cocreate](https://github.com/cocreate) package versions ([77f4f0f](https://github.com/CoCreateJS/users/commit/77f4f0fde1adb5b9c7c0d35856d7b8b903cc5fb0))
+* bump versions ([8ee0ffb](https://github.com/CoCreateJS/users/commit/8ee0ffb768dba04da37963d16af122ba9a77fd79))
+* bump versions ([e50c2e9](https://github.com/CoCreateJS/users/commit/e50c2e9ea4ee673b4eb990b30402fa04c6aebe33))
+* bumped dependencies ([da0cc75](https://github.com/CoCreateJS/users/commit/da0cc7577384c923df4d2bec38e2efbd578e1df7))
+* remove trailing slash from node_modules entry in .gitignore ([96ac030](https://github.com/CoCreateJS/users/commit/96ac030c60e9f601b38b7c0ba1572e78f407b9a5))
+* replace Config.remove() with Config.delete() for user_id and token ([ec21874](https://github.com/CoCreateJS/users/commit/ec21874dff4c3eaaaccd1a45e5fa2dfa6bb64d01))
+* replace legacy $filter field with filter ([d47869e](https://github.com/CoCreateJS/users/commit/d47869e58579a474a6e8e0d7f3b24c90b6284787))
+* replace uid with uuid in user-related functions ([0bfd27a](https://github.com/CoCreateJS/users/commit/0bfd27a81c83384796a72a83f9e80925bc91b1f8))
+* update git url ([d3cd1fe](https://github.com/CoCreateJS/users/commit/d3cd1fee4dab6c113c24f71faee6395c738af431))
+* update GitHub Actions to use latest versions and sync package.json description ([c1a2a06](https://github.com/CoCreateJS/users/commit/c1a2a06bb9e0480b5ce889601c645401e79b512b))
+
+
+### chore
+
+* record package identity migration as breaking ([84e95c0](https://github.com/CoCreateJS/users/commit/84e95c08f07b15ef12cd975c90dfea9bfd4c19c1))
+
+
+### Features
+
+* bump all dependencies ([da1f9a4](https://github.com/CoCreateJS/users/commit/da1f9a4690477741a477484690e1fd701e38b615))
+* bumped all dependency versions ([b8d2776](https://github.com/CoCreateJS/users/commit/b8d2776e373781631dcacedfb785aec4423daf48))
+* reorganize CoCreateUser methods and improve session handling ([854e7a5](https://github.com/CoCreateJS/users/commit/854e7a5692e165238df878c3a923c33156e13885))
+
+
+### BREAKING CHANGES
+
+* Consumers must install @cocreate/users and use the CoCreateJS repository identity; previous package and repository identities are no longer supported.
+
 ## [1.40.2](https://github.com/CoCreateJS/CoCreate-users/compare/v1.40.1...v1.40.2) (2026-07-19)
 
 
