@@ -258,18 +258,17 @@ async function userStatus(data) {
                 });
             }
         } else if (data.socket) {
-            data.socket.send(
-                JSON.stringify({
-                    method: "updateUserStatus",
-                    host: data.host,
-                    user_id: data.user_id,
-                    userStatus: data.userStatus,
-                    clientId: data.clientId,
-                    token: data.token,
-                    organization_id:
-                        data.organization_id || (data.socket && data.socket.organization_id)
-                })
-            );
+            server.send({
+                socket: data.socket,
+                method: "updateUserStatus",
+                host: data.host,
+                user_id: data.user_id,
+                userStatus: data.userStatus,
+                clientId: data.clientId,
+                token: data.token,
+                organization_id:
+                    data.organization_id || (data.socket && data.socket.organization_id)
+            });
         }
     } catch (error) {
         console.error("userStatus error", error);
