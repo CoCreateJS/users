@@ -23,6 +23,34 @@
 
 let server;
 
+function withoutSocket(data) {
+    if (!data || typeof data !== "object") return data;
+    const envelope = { ...data };
+    delete envelope.socket;
+    return envelope;
+}
+
+function connectionFields(data) {
+    return {
+        host: data.host,
+        organization_id: data.organization_id,
+        clientId: data.clientId,
+        socketId: data.socketId
+    };
+}
+
+// Credential operations are private CRUD work. Only the final application response
+// carries the requesting client's delivery and correlation fields.
+function privateRequest(data) {
+    const envelope = withoutSocket(data);
+    for (const field of [
+        "socketId", "clientId", "uuid", "frameId", "replyOrganizationId",
+        "broadcast", "broadcastClient", "broadcastSender", "subscription", "subscriptionKeys",
+        "server", "worker", "cluster", "master", "serverId", "workerId", "clusterId", "response"
+    ]) delete envelope[field];
+    return envelope;
+}
+
 /**
  * Handles the user sign-up process by performing identity validation,
  * contact record synchronization, and credential attachment.
@@ -32,8 +60,7 @@ let server;
 async function signUp(data) {
     try {
         let response = {
-            socket: data.socket,
-            host: data.host,
+            ...connectionFields(data),
             method: "signUp",
             success: false,
             message: "signUp failed",
@@ -53,6 +80,9 @@ async function signUp(data) {
 
         const keyCheck = await server.crud.send({
             method: "object.read",
+            organization_id: data.organization_id,
+            host: data.host,
+            user_id: data.user_id,
             array: "keys",
             filter: {
                 limit: 1,
@@ -77,42 +107,44 @@ async function signUp(data) {
                 response.message = "An account with these details already exists";
             }
 
-            if (server.wsManager) {
-                server.send(response);
-            }
+            server.send(response);
             return; // Exit early: Gatekeeper blocked the sign-up.
         }
 
         // --- STEP 2: Resolve or Create the Contact ---
         if (data.user) {
-            data.user.method = "object.create";
-            data.user.host = data.host;
-
-            if (!data.user.organization_id) {
-                data.user.organization_id = data.organization_id;
-            }
-
             if (userObject) {
                 delete userObject.password; // Remove password attribute to avoid plain text database leakage
             }
 
-            let userResult = await server.crud.send(data.user);
+            const userRequest = privateRequest({
+                ...data.user,
+                method: "object.create",
+                host: data.host,
+                user_id: data.user_id,
+                organization_id: data.organization_id
+            });
+            let userResult = await server.crud.send(userRequest);
 
             // --- STEP 3: Create the Key ---
             if (data.userKey && userResult.object?.[0]?._id) {
                 const resolvedUserId = userResult.object[0]._id;
 
-                data.userKey.method = "object.create";
-                data.userKey.host = data.host;
-                data.userKey.object.key = resolvedUserId;
-                data.userKey.object.email = targetEmail;
-
-                if (!data.userKey.organization_id) {
-                    data.userKey.organization_id = data.organization_id;
-                }
+                const userKeyRequest = privateRequest({
+                    ...data.userKey,
+                    method: "object.create",
+                    host: data.host,
+                    user_id: data.user_id,
+                    organization_id: data.organization_id,
+                    object: {
+                        ...data.userKey.object,
+                        key: resolvedUserId,
+                        email: targetEmail
+                    }
+                });
 
                 // Get the result and check for an ID to confirm success
-                let createdKey = await server.crud.send(data.userKey);
+                let createdKey = await server.crud.send(userKeyRequest);
 
                 if (createdKey.object?.[0]?._id) {
                     response.success = true;
@@ -125,9 +157,7 @@ async function signUp(data) {
             }
         }
 
-        if (server.wsManager) {
-            server.send(response);
-        }
+        server.send(response);
 
     } catch (error) {
         console.error("signup error", error);
@@ -146,43 +176,41 @@ async function signIn(data) {
 
         data.method = "object.read";
         data.array = "keys";
-        let socket = data.socket;
-        delete data.socket;
-
-        const result = await server.crud.send(data);
+        const result = await server.crud.send(privateRequest(data));
 
         let response = {
-            socket,
-            host: result.host,
+            ...connectionFields(data),
+            host: result.host || data.host,
             method: "signIn",
             success: false,
             message: "signIn failed",
             userStatus: "offline",
-            organization_id: result.organization_id,
-            uuid: result.uuid
+            organization_id: data.organization_id,
+            uuid: data.uuid
         };
 
         if (
             result.object[0] &&
             result.object[0]._id &&
-            server.wsManager &&
             server.authenticate
         ) {
             const user_id = result.object[0].key;
             const token = server.authenticate.encodeToken(
-                result.organization_id,
+                data.organization_id,
                 user_id,
-                result.clientId,
-                result.host
+                data.clientId,
+                data.host
             );
 
             if (token && token !== "null") {
                 const session = await server.authenticate.decodeToken(
                     token,
-                    result.organization_id,
-                    result.clientId,
-                    result.host
+                    data.organization_id,
+                    data.clientId,
+                    data.host
                 );
+                const socket = server.socket?.get(data.socketId);
+                if (!socket) throw new Error("Unable to find the active socket for sign-in");
                 socket.user_id = user_id;
                 socket.expires = session.expires;
                 response.success = true;
@@ -193,17 +221,15 @@ async function signIn(data) {
             }
         }
 
-        if (server.wsManager) {
-            server.send(response);
-            server.send({
-                socket,
-                host: result.host,
-                method: "updateUserStatus",
-                user_id: response.user_id,
-                userStatus: response.userStatus,
-                organization_id: response.organization_id
-            });
-        }
+        server.send(response);
+        server.send({
+            ...connectionFields(data),
+            host: result.host || data.host,
+            method: "updateUserStatus",
+            user_id: response.user_id,
+            userStatus: response.userStatus,
+            organization_id: data.organization_id
+        });
     } catch (error) {
         console.error("signIn failed", error);
     }
@@ -228,7 +254,7 @@ async function userStatus(data) {
                     query: { key: data.user_id },
                     limit: 1
                 },
-                organization_id: data.organization_id || (data.socket && data.socket.organization_id)
+                organization_id: data.organization_id
             });
 
             if (keyData && keyData.object && keyData.object.length > 0 && keyData.object[0].array) {
@@ -242,32 +268,28 @@ async function userStatus(data) {
             };
 
             data.method = "object.update";
-            const updatedData = await server.crud.send(data);
+            const updatedData = await server.crud.send(withoutSocket(data));
 
-            if (updatedData.socket && server.wsManager) {
-                server.send({
-                    socket: updatedData.socket,
-                    method: "updateUserStatus",
-                    host: updatedData.host,
-                    user_id: updatedData.user_id,
-                    clientId: updatedData.clientId,
-                    userStatus: updatedData.userStatus,
-                    token: updatedData.token,
-                    organization_id:
-                        updatedData.organization_id || (updatedData.socket && updatedData.socket.organization_id)
-                });
-            }
-        } else if (data.socket) {
             server.send({
-                socket: data.socket,
+                ...connectionFields(data),
+                method: "updateUserStatus",
+                host: data.host,
+                user_id: data.user_id,
+                clientId: data.clientId,
+                userStatus: data.userStatus,
+                token: data.token,
+                organization_id: data.organization_id
+            });
+        } else {
+            server.send({
+                ...connectionFields(data),
                 method: "updateUserStatus",
                 host: data.host,
                 user_id: data.user_id,
                 userStatus: data.userStatus,
                 clientId: data.clientId,
                 token: data.token,
-                organization_id:
-                    data.organization_id || (data.socket && data.socket.organization_id)
+                organization_id: data.organization_id
             });
         }
     } catch (error) {
@@ -284,12 +306,10 @@ async function checkSession(data) {
     try {
         data.method = "updateUserStatus";
 
-        if (!data.socket.user_id) data.userStatus = "offline";
+        if (!data.user_id) data.userStatus = "offline";
         else data.userStatus = "online";
 
-        if (server && server.wsManager) {
-            server.send(data);
-        }
+        server.send(withoutSocket(data));
     } catch (error) {
         console.error("checkSession error", error);
     }
@@ -317,7 +337,7 @@ async function inviteUser(data) {
                 query: { key: data.user_id },
                 limit: 1
             },
-            organization_id: data.organization_id || (data.socket && data.socket.organization_id)
+            organization_id: data.organization_id
         });
 
         if (keyData && keyData.object && keyData.object.length > 0 && keyData.object[0].array) {
@@ -335,7 +355,7 @@ async function inviteUser(data) {
         // Bypass crud.sync check to update across local clients simultaneously
         data.updateDB = true;
 
-        const updatedData = await server.crud.send(data);
+        const updatedData = await server.crud.send(withoutSocket(data));
 
         let invitee = await server.crud.send({
             method: "object.read",
@@ -399,23 +419,19 @@ async function inviteUser(data) {
         }
 
         let response = {
-            socket: updatedData.socket,
-            host: updatedData.host,
+            ...connectionFields(data),
+            host: updatedData.host || data.host,
             method: "inviteUser",
             success: true,
             message: "Successfully sent invite",
-            organization_id: updatedData.organization_id,
+            organization_id: data.organization_id,
             uuid
         };
 
-        if (server.wsManager) {
-            server.send(response);
-        }
+        server.send(response);
     } catch (error) {
         data.error = error;
-        if (server && server.wsManager) {
-            server.send(data);
-        }
+        server.send(withoutSocket(data));
         console.error("Invite User failed", error);
     }
 }
@@ -451,16 +467,16 @@ async function acceptInvite(data) {
 
         data.updateDB = true;
 
-        const updatedData = await server.crud.send(data);
+        const updatedData = await server.crud.send(withoutSocket(data));
 
         let response = {
-            socket: updatedData.socket,
-            host: updatedData.host,
+            ...connectionFields(data),
+            host: updatedData.host || data.host,
             method: "acceptInvite",
             success: false,
             message:
                 "The token is invalid or has expired. However, you can still access your account. Please request a new invite to proceed, and feel free to explore the available features while you wait.",
-            organization_id: updatedData.organization_id,
+            organization_id: data.organization_id,
             uuid
         };
 
@@ -471,7 +487,7 @@ async function acceptInvite(data) {
                     _id: object._id,
                     "$addToSet.members": updatedData.user_id
                 };
-                const finalData = await server.crud.send(updatedData);
+                const finalData = await server.crud.send(withoutSocket(updatedData));
                 await server.crud.send({
                     method: "object.update",
                     host: finalData.host,
@@ -488,9 +504,7 @@ async function acceptInvite(data) {
             }
         }
 
-        if (server.wsManager) {
-            server.send(response);
-        }
+        server.send(response);
     } catch (error) {
         console.error("Accept invite failed", error);
     }
@@ -506,9 +520,6 @@ async function forgotPassword(data) {
         if (!server || !server.crud) return;
 
         const recoveryId = server.crud.ObjectId().toString();
-        let socket = data.socket;
-        delete data.socket;
-
         data.method = "object.update";
         data.array = "keys";
         data.object = { recoveryId };
@@ -517,16 +528,16 @@ async function forgotPassword(data) {
             limit: 1
         };
 
-        const result = await server.crud.send(data);
+        const result = await server.crud.send(privateRequest(data));
 
         let response = {
-            socket,
-            host: result.host,
+            ...connectionFields(data),
+            host: result.host || data.host,
             method: "forgotPassword",
             success: false,
             message: "Email does not exist",
             organization_id: result.organization_id,
-            uuid: result.uuid
+            uuid: data.uuid
         };
 
         for (let object of result.object) {
@@ -579,9 +590,7 @@ async function forgotPassword(data) {
             }
         }
 
-        if (server.wsManager) {
-            server.send(response);
-        }
+        server.send(response);
     } catch (error) {
         console.error("Forgot Password failed", error);
     }
@@ -605,16 +614,16 @@ async function resetPassword(data) {
             limit: 1
         };
 
-        const result = await server.crud.send(data);
+        const result = await server.crud.send(privateRequest(data));
 
         let response = {
-            socket: result.socket,
-            host: result.host,
+            ...connectionFields(data),
+            host: result.host || data.host,
             method: "resetPassword",
             success: false,
             message: "Token is invalid or has expired",
             organization_id: result.organization_id,
-            uuid: result.uuid
+            uuid: data.uuid
         };
 
         for (let object of result.object) {
@@ -625,9 +634,7 @@ async function resetPassword(data) {
             }
         }
 
-        if (server.wsManager) {
-            server.send(response);
-        }
+        server.send(response);
     } catch (error) {
         console.error("Password reset failed", error);
     }
