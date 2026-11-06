@@ -78,7 +78,7 @@ async function signUp(data) {
             }
 
             if (server.wsManager) {
-                server.wsManager.send(response);
+                server.send(response);
             }
             return; // Exit early: Gatekeeper blocked the sign-up.
         }
@@ -126,7 +126,7 @@ async function signUp(data) {
         }
 
         if (server.wsManager) {
-            server.wsManager.send(response);
+            server.send(response);
         }
 
     } catch (error) {
@@ -194,8 +194,8 @@ async function signIn(data) {
         }
 
         if (server.wsManager) {
-            server.wsManager.send(response);
-            server.wsManager.send({
+            server.send(response);
+            server.send({
                 socket,
                 host: result.host,
                 method: "updateUserStatus",
@@ -245,7 +245,7 @@ async function userStatus(data) {
             const updatedData = await server.crud.send(data);
 
             if (updatedData.socket && server.wsManager) {
-                server.wsManager.send({
+                server.send({
                     socket: updatedData.socket,
                     method: "updateUserStatus",
                     host: updatedData.host,
@@ -289,7 +289,7 @@ async function checkSession(data) {
         else data.userStatus = "online";
 
         if (server && server.wsManager) {
-            server.wsManager.send(data);
+            server.send(data);
         }
     } catch (error) {
         console.error("checkSession error", error);
@@ -410,12 +410,12 @@ async function inviteUser(data) {
         };
 
         if (server.wsManager) {
-            server.wsManager.send(response);
+            server.send(response);
         }
     } catch (error) {
         data.error = error;
         if (server && server.wsManager) {
-            server.wsManager.send(data);
+            server.send(data);
         }
         console.error("Invite User failed", error);
     }
@@ -490,7 +490,7 @@ async function acceptInvite(data) {
         }
 
         if (server.wsManager) {
-            server.wsManager.send(response);
+            server.send(response);
         }
     } catch (error) {
         console.error("Accept invite failed", error);
@@ -581,7 +581,7 @@ async function forgotPassword(data) {
         }
 
         if (server.wsManager) {
-            server.wsManager.send(response);
+            server.send(response);
         }
     } catch (error) {
         console.error("Forgot Password failed", error);
@@ -627,7 +627,7 @@ async function resetPassword(data) {
         }
 
         if (server.wsManager) {
-            server.wsManager.send(response);
+            server.send(response);
         }
     } catch (error) {
         console.error("Password reset failed", error);
