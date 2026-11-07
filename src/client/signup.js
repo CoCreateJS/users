@@ -1,5 +1,5 @@
 import Actions from "@cocreate/actions";
-import Crud from "@cocreate/crud-client";
+import { crudClient as Crud } from '@cocreate/crud/client';
 import Elements from "@cocreate/elements";
 import { render } from "@cocreate/render";
 

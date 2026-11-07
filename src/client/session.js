@@ -1,6 +1,6 @@
 import Actions from "@cocreate/actions";
 import Observer from "@cocreate/observer";
-import Crud from "@cocreate/crud-client";
+import { crudClient as Crud } from '@cocreate/crud/client';
 import Config from "@cocreate/config";
 import { render } from "@cocreate/render";
 import { initSessionCookie, setSessionCookie } from "./sessionCookie.js";

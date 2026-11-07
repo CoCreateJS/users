@@ -106,7 +106,7 @@ document.querySelectorAll(clientSelector).forEach(loadElement);
 
 const CoCreateUser = {
     organization_id: async () =>
-        (await import("@cocreate/crud-client")).default.socket.organization_id(),
+        (await import("@cocreate/crud/client")).crudClient.socket.organization_id(),
     init: () =>
         import(/* webpackChunkName: "users-session" */ "./session.js").then(
             (module) => module.init()
