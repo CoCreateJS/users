@@ -54,7 +54,8 @@ for (const method of ['signIn', 'forgotPassword', 'resetPassword']) {
         assert.equal(query.organization_id, 'org');
         assert.equal(query.host, 'host.test');
         assert.equal(query.user_id, 'sender');
-        for (const field of ['socket', 'socketId', 'clientId', 'uuid', 'broadcast', 'subscriptionKeys', 'response', 'replyOrganizationId']) {
+        assert.deepEqual(query.socket, {});
+        for (const field of ['socketId', 'clientId', 'uuid', 'broadcast', 'subscriptionKeys', 'response', 'replyOrganizationId']) {
             assert.equal(field in query, false, `${field} must not route a credential result`);
         }
         const correlated = f.sent.filter(data => data.uuid === 'original-request');

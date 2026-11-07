@@ -23,13 +23,6 @@
 
 let server;
 
-function withoutSocket(data) {
-    if (!data || typeof data !== "object") return data;
-    const envelope = { ...data };
-    delete envelope.socket;
-    return envelope;
-}
-
 function connectionFields(data) {
     return {
         host: data.host,
@@ -42,7 +35,7 @@ function connectionFields(data) {
 // Credential operations are private CRUD work. Only the final application response
 // carries the requesting client's delivery and correlation fields.
 function privateRequest(data) {
-    const envelope = withoutSocket(data);
+    const envelope = { ...data };
     for (const field of [
         "socketId", "clientId", "uuid", "frameId", "replyOrganizationId",
         "broadcast", "broadcastClient", "broadcastSender", "subscription", "subscriptionKeys",
@@ -268,7 +261,7 @@ async function userStatus(data) {
             };
 
             data.method = "object.update";
-            const updatedData = await server.crud.send(withoutSocket(data));
+            const updatedData = await server.crud.send({ ...data });
 
             server.send({
                 ...connectionFields(data),
@@ -309,7 +302,7 @@ async function checkSession(data) {
         if (!data.user_id) data.userStatus = "offline";
         else data.userStatus = "online";
 
-        server.send(withoutSocket(data));
+        server.send({ ...data });
     } catch (error) {
         console.error("checkSession error", error);
     }
@@ -355,7 +348,7 @@ async function inviteUser(data) {
         // Bypass crud.sync check to update across local clients simultaneously
         data.updateDB = true;
 
-        const updatedData = await server.crud.send(withoutSocket(data));
+        const updatedData = await server.crud.send({ ...data });
 
         let invitee = await server.crud.send({
             method: "object.read",
@@ -431,7 +424,7 @@ async function inviteUser(data) {
         server.send(response);
     } catch (error) {
         data.error = error;
-        server.send(withoutSocket(data));
+        server.send({ ...data });
         console.error("Invite User failed", error);
     }
 }
@@ -467,7 +460,7 @@ async function acceptInvite(data) {
 
         data.updateDB = true;
 
-        const updatedData = await server.crud.send(withoutSocket(data));
+        const updatedData = await server.crud.send({ ...data });
 
         let response = {
             ...connectionFields(data),
@@ -487,7 +480,7 @@ async function acceptInvite(data) {
                     _id: object._id,
                     "$addToSet.members": updatedData.user_id
                 };
-                const finalData = await server.crud.send(withoutSocket(updatedData));
+                const finalData = await server.crud.send({ ...updatedData });
                 await server.crud.send({
                     method: "object.update",
                     host: finalData.host,
