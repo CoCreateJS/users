@@ -1,3 +1,13 @@
+## [2.0.2](https://github.com/CoCreateJS/users/compare/v2.0.1...v2.0.2) (2026-11-07)
+
+
+### Bug Fixes
+
+* preserve socket data in user responses ([d8020ab](https://github.com/CoCreateJS/users/commit/d8020abd78a5bd60b6a138055223595dbf235bd0))
+* route component responses through unified server send ([601cb70](https://github.com/CoCreateJS/users/commit/601cb70d16664470868b53f038a6720d9be998c0))
+* route user responses through server send ([b96f18f](https://github.com/CoCreateJS/users/commit/b96f18f0647bf73ce342112e73de1e621306fe32))
+* route user status through server send ([1d87868](https://github.com/CoCreateJS/users/commit/1d87868f49b6c4d2c390aaf3ff41c1329e8e364a))
+
 ## [2.0.1](https://github.com/CoCreateJS/users/compare/v2.0.0...v2.0.1) (2026-11-05)
 
 
