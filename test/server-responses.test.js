@@ -10,10 +10,8 @@ function fixture() {
     const socket = { id: 'socket' };
     const server = {
         send(data) { sent.push(data); return Promise.resolve(data); },
-        wsManager: {
-            on(name, handler) { handlers.set(name, handler); },
-            emit(name, data) { emails.push({ name, data }); }
-        },
+        on(name, handler) { handlers.set(name, handler); },
+        emit(name, data) { emails.push({ name, data }); return true; },
         socket: { get(id) { return id === 'socket' ? socket : undefined; } },
         authenticate: { encodeToken: () => 'session-token', decodeToken: async () => ({ expires: Date.now() + 60000 }) },
         crud: {

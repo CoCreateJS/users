@@ -407,8 +407,8 @@ async function inviteUser(data) {
             organization_id: updatedData.organization_id
         };
 
-        if (server.wsManager) {
-            server.wsManager.emit("postmark", email);
+        if (server) {
+            server.emit("postmark", email);
         }
 
         let response = {
@@ -576,8 +576,8 @@ async function forgotPassword(data) {
                     organization_id: result.organization_id
                 };
 
-                if (server.wsManager) {
-                    server.wsManager.emit("postmark", email);
+                if (server) {
+                    server.emit("postmark", email);
                 }
                 break;
             }
@@ -641,19 +641,19 @@ async function resetPassword(data) {
  * @environment server
  */
 export function init(serverInstance) {
-    if (!serverInstance?.crud || !serverInstance?.wsManager) {
-        throw new Error("[@cocreate/users] init requires a server with crud and wsManager.");
+    if (!serverInstance?.crud || !serverInstance?.on) {
+        throw new Error("[@cocreate/users] init requires a server with crud and on().");
     }
 
     server = serverInstance;
-    server.wsManager.on("signUp", (data) => signUp(data));
-    server.wsManager.on("signIn", (data) => signIn(data));
-    server.wsManager.on("userStatus", (data) => userStatus(data));
-    server.wsManager.on("checkSession", (data) => checkSession(data));
-    server.wsManager.on("inviteUser", (data) => inviteUser(data));
-    server.wsManager.on("acceptInvite", (data) => acceptInvite(data));
-    server.wsManager.on("forgotPassword", (data) => forgotPassword(data));
-    server.wsManager.on("resetPassword", (data) => resetPassword(data));
+    server.on("signUp", (data) => signUp(data));
+    server.on("signIn", (data) => signIn(data));
+    server.on("userStatus", (data) => userStatus(data));
+    server.on("checkSession", (data) => checkSession(data));
+    server.on("inviteUser", (data) => inviteUser(data));
+    server.on("acceptInvite", (data) => acceptInvite(data));
+    server.on("forgotPassword", (data) => forgotPassword(data));
+    server.on("resetPassword", (data) => resetPassword(data));
     return server;
 }
 
