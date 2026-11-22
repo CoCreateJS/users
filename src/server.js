@@ -39,7 +39,7 @@ function privateRequest(data) {
     for (const field of [
         "socketId", "clientId", "uuid", "frameId", "replyOrganizationId",
         "broadcast", "broadcastClient", "broadcastSender", "subscription", "subscriptionKeys",
-        "server", "worker", "cluster", "master", "serverId", "workerId", "clusterId", "response"
+        "server", "worker", "cluster", "primary", "serverId", "workerId", "clusterId", "response"
     ]) delete envelope[field];
     return envelope;
 }
